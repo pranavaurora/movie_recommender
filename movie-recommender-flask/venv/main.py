@@ -5,6 +5,7 @@ from sqlalchemy import *
 import pandas as pd
 import json
 from sentence_transformers import SentenceTransformer
+import uuid
 
 # Initialize connection.
 # Uses Flask cache to only run once.
@@ -34,25 +35,86 @@ def search_movies():
         conn = init_connection()
         query = (
             "WITH queryouter AS ("
-                "SELECT DISTINCT(title), MATCH(title) AGAINST (%s) as relevance "
+                "SELECT DISTINCT(title), movieId, MATCH(title) AGAINST (%s) as relevance "
                 "FROM movies_with_full_text "
                 "WHERE MATCH(title) AGAINST (%s) "
                 "ORDER BY relevance DESC "
                 "LIMIT 3"
             ")"
-            "SELECT title FROM queryouter;"
+            "SELECT title, movieId FROM queryouter;"
         )
         cursor = conn.cursor()
         cursor.execute(query, (prefix, prefix))
         rows = cursor.fetchall()
+        #results = [{"title": row[1], "movieId": row[0]} for row in rows]
         titles = [row[0] for row in rows]
         print(titles)
         return jsonify(titles)
+        #return redirect(url_for('movie_recommendation', titles=','.join(titles)))
     except Exception as e:
         print(e)
         return "Error"
 
+@app.route("/movie_recommendation", methods=["POST"])
+def movie_recommendation():
+    cursor = None
+    try:
+        # Get the titles from the query parameter
+        selected_movies = request.json['selected_movies']
+        # Use the titles to generate movie recommendations
+        conn = init_connection()
+        temp_table_name = "temp_table_" + str(uuid.uuid4()).replace("-", "")
+        with conn.cursor() as cursor:
+            # Create the temporary table with a unique name
+            cursor.execute(f"""
+                CREATE TEMPORARY TABLE {temp_table_name} (
+                    title VARCHAR(255)
+                );
+            """)
 
+            # Insert the data from the selected_movies list in Python
+            for movie in selected_movies:
+                cursor.execute(
+                    "INSERT INTO temp_table_name (title) VALUES (%s)",
+                    (movie["title"])
+                )
+            # Commit the changes to the database
+            conn.commit()
+            
+            # Run the query you provided
+            cursor.execute("""
+                With table_match as (
+                    select m.title, m.movieId, m.vector from {temp_table_name} as t
+                    inner join movie_with_tags_with_vectors m
+                ),
+                movie_pairs AS (
+                    SELECT m1.movieId AS movieId1, m1.title as title1, m2.movieId AS movieId2, m2.title as title2, DOT_PRODUCT(m1.vector, m2.vector) AS similarity 
+                    FROM table_match m1 
+                    CROSS JOIN movie_with_tags_with_vectors m2
+                    WHERE m1.movieId != m2.movieId),
+                    movie_match as ( 
+                        SELECT movieId1,title1, movieId2,title2, similarity 
+                        FROM movie_pairs 
+                        WHERE similarity > 0.4 
+                        order by similarity desc), 
+                            distinct_count as ( 
+                                select distinct movieId2, title2 as Title, round(avg(similarity),2) as Rating_Match from movie_match 
+                                group by movieId2,title2 
+                                order by Rating_Match desc)
+                ;
+            """)
+            
+            # Fetch the result rows
+            output_list = cursor.fetchall()
+            
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    
+    df = pd.DataFrame(output_list, columns=["Title", "Rating_Match"])
+    return render_template("index.html", data=df.to_html(classes="table table-striped table-hover"))
 
 #NONE OF THE STUFF BELOW IS IN USE ... We will need a new route for when the submit button is hit....
 
