@@ -186,10 +186,25 @@
       });
 
       $("#run-button").on("click", function() {
-        var movie1 = selected_movies[0];
-        var movie2 = selected_movies[1];
-        var movie3 = selected_movies[2];
-        
+        //var movie1 = selected_movies[0];
+        //var movie2 = selected_movies[1];
+        //var movie3 = selected_movies[2];
+
+          // Send the list of movies to your Flask route using AJAX
+        $.ajax({
+          url: "/movie_recommendation",
+          type: "POST",
+          data: JSON.stringify(selected_movies),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: function(response) {
+            // Handle the response from your Flask route
+          },
+          error: function(xhr, status, error) {
+            console.log("Error: " + error);
+          }
+  });
+
         // do something with the selected movies --> want to use $.ajax here to hit the backend function.
       });
 
