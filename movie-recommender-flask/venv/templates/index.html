@@ -194,9 +194,8 @@
         $.ajax({
           url: "/movie_recommendation",
           type: "POST",
-          data: JSON.stringify(selected_movies),
-          contentType: "application/json; charset=utf-8",
-          dataType: "json",
+          data: JSON.stringify({ "selected_movies": selected_movies }),
+          contentType: "application/json",
           success: function(response) {
             // Handle the response from your Flask route
           },
@@ -223,5 +222,9 @@
       <div id="autocomplete-items" class="autocomplete-items"></div>
     </div>
   </div>
+  {% if data is not none %}
+  <h2>Recommended Movies</h2>
+  {{ data|safe }}
+{% endif %}
 </body>
 </html>
