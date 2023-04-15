@@ -100,7 +100,6 @@ def movie_recommendation():
                 movie_match as ( 
                     SELECT movieId1,title1, movieId2,title2, similarity 
                     FROM movie_pairs 
-                    WHERE similarity > 0.4 
                     order by similarity desc), 
                         distinct_count as ( 
                             select distinct movieId2, title2 as Title, round(avg(similarity),2) as Rating_Match from movie_match 
