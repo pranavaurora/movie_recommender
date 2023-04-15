@@ -14,7 +14,7 @@ def init_connection():
 
 app = Flask(__name__)
 app.config["MYSQL"] = {
-    "host": "svc-a3f7f2ba-378c-40ab-863e-3c53ea0efe9b-dml.aws-virginia-5.svc.singlestore.com",
+    "host": "svc-a3f7f2ba-378c-40ab-be2e-9fa993172504-dml.aws-virginia-5.svc.singlestore.com",
     "user": "admin",
     "password": "Test1234",
     "database": "movie_recommender"
