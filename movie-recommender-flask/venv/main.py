@@ -1,10 +1,6 @@
 from flask import Flask, jsonify, request, render_template, session
 import mysql.connector
-import sqlalchemy
-from sqlalchemy import *
-import pandas as pd
 import json
-from sentence_transformers import SentenceTransformer
 import uuid
 
 # Initialize connection.
@@ -20,8 +16,6 @@ app.config["MYSQL"] = {
     "database": "movie_recommender"
 }
 app.secret_key = "Test1234"
-
-model = SentenceTransformer('flax-sentence-embeddings/all_datasets_v3_mpnet-base')
 
 @app.route('/')
 def home():
@@ -149,3 +143,4 @@ def movie_recommendation():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
