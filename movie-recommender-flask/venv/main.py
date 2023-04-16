@@ -102,16 +102,22 @@ def movie_recommendation():
                     SELECT movieId1, title1, movieId2, title2, similarity 
                     FROM movie_pairs 
                     ORDER BY similarity DESC
-            ), 
+            ),
             distinct_count AS ( 
                     SELECT DISTINCT movieId2, title2 AS Title, ROUND(AVG(similarity), 4) AS Rating_Match 
                     FROM movie_match 
                     GROUP BY movieId2, title2
                     ORDER BY Rating_Match DESC
+            ),
+            average_ratings AS (
+                    SELECT movieId, AVG(rating) AS Avg_Rating
+                    FROM ratings
+                    GROUP BY movieId
             )
-            SELECT Title, Rating_Match 
-            FROM distinct_count
-            ORDER BY Rating_Match DESC
+            SELECT dc.Title, dc.Rating_Match, ROUND(ar.Avg_Rating, 4) AS Avg_Rating
+            FROM distinct_count dc
+            JOIN average_ratings ar ON dc.movieId2 = ar.movieId
+            ORDER BY dc.Rating_Match DESC
             LIMIT 5;
         """, (user_session, user_session))
 
@@ -123,6 +129,7 @@ def movie_recommendation():
             result = {}
             result['title'] = row[0]
             result['rating_match'] = row[1]
+            result['avg_rating'] = row[2]
             results.append(result)
 
         # now you can use the results list as needed
@@ -136,10 +143,6 @@ def movie_recommendation():
     print(jsonify(results))
     print(type(results))
     return(jsonify(results))
-
-    df = pd.DataFrame(results, columns=["title", "rating_match"])
-    print(df)
-    #return render_template("index.html", data=df.to_html(classes="table table-striped table-hover"))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

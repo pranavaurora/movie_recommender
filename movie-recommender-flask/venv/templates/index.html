@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 	<title>Movie Recommender</title>
 	<style type="text/css">
 
@@ -166,9 +167,11 @@
     }
     #footer {
       position: fixed;
-      bottom: 0;
+      bottom: calc(30px + 0.5rem);
+      left: 50%;
+      transform: translateX(-50%);
       text-align: center;
-      font-size: 14px;
+      font-size: 20px;
       font-family: Lato, sans-serif;
       color: #4C4A57;
       font-style: light;
@@ -278,8 +281,9 @@
               const recommendation = response[i];
               const rank = i + 1;
               const title = recommendation.title;
-              const rating = (recommendation.rating_match * 100).toFixed(4) + "%";
-              const row = `<tr><td>${rank}</td><td>${title}</td><td>${rating}</td></tr>`;
+              const rating = (recommendation.rating_match * 100).toFixed(1) + "%";
+              const user_review = (recommendation.avg_rating).toFixed(1);
+              const row = `<tr><td>${rank}</td><td>${title}</td><td>${rating}</td><td>${user_review}</td></tr> `;
               recommendationsTable.find("tbody").append(row);
             }
 
@@ -299,8 +303,8 @@
 </head>
 <body>
   <div id="search-container">
-    <label for="movie-search">What are your favorite movies?</label>
-    <p>Let us pick your next movie – just tell us what you like to watch</p>
+    <label for="movie-search">Let AI pick your next movie</label>
+    <p>Give us at least 3 of your favorite movies and let AI find your next watch</p>
     <div id="input-container">
       <div id="selected-movies"></div>
       <div id="search-box">
@@ -319,6 +323,7 @@
           <th>Rank</th>
           <th>Title</th>
           <th>Match Score</th>
+          <th>Average User Rating</th>
         </tr>
       </thead>
       <tbody>
@@ -328,7 +333,7 @@
   </div>
   
   <div id="footer">
-    <a href="https://www.singlestore.com/">built with ♡ on SingleStoreDB using full-text & semantic search</a>
+    built with ♡ on  <a href="https://www.singlestore.com/">SingleStoreDB </a> with full-text & semantic search
   </div>
 </body>
 </html>
