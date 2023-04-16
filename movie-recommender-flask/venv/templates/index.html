@@ -165,12 +165,14 @@
       min-height: 100vh;
     }
     #footer {
-      margin-top: 520px;
+      position: fixed;
+      bottom: 0;
       text-align: center;
       font-size: 14px;
       font-family: Lato, sans-serif;
       color: #4C4A57;
       font-style: light;
+      width: 100%;
     }
     p {
       font-family: 'Lato', sans-serif;
@@ -276,7 +278,7 @@
               const recommendation = response[i];
               const rank = i + 1;
               const title = recommendation.title;
-              const rating = (recommendation.rating_match * 100).toFixed(2) + "%";
+              const rating = (recommendation.rating_match * 100).toFixed(4) + "%";
               const row = `<tr><td>${rank}</td><td>${title}</td><td>${rating}</td></tr>`;
               recommendationsTable.find("tbody").append(row);
             }
