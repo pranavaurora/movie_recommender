@@ -86,29 +86,40 @@ def movie_recommendation():
         
         # Run the query you provided
         cursor.execute(f"""
-                with table_match as (
-                SELECT m.title, m.movieId, m.vector
-                FROM user_choice t
-                INNER JOIN movie_with_tags_with_vectors m on m.title = t.title
-                where userid=%s
-                ),
+            WITH table_match AS (
+                    SELECT m.title, m.movieId, m.vector
+                    FROM user_choice t
+                    INNER JOIN movie_with_tags_with_vectors m ON m.title = t.title
+                    WHERE userid = %s
+            ),
             movie_pairs AS (
-                SELECT m1.movieId AS movieId1, m1.title as title1, m2.movieId AS movieId2, m2.title as title2, DOT_PRODUCT(m1.vector, m2.vector) AS similarity 
-                FROM table_match m1 
-                CROSS JOIN movie_with_tags_with_vectors m2
-                WHERE m1.movieId != m2.movieId),
-                movie_match as ( 
-                    SELECT movieId1,title1, movieId2,title2, similarity 
+                    SELECT m1.movieId AS movieId1, m1.title AS title1, m2.movieId AS movieId2, m2.title AS title2, DOT_PRODUCT(m1.vector, m2.vector) AS similarity 
+                    FROM table_match m1 
+                    CROSS JOIN movie_with_tags_with_vectors m2
+                    WHERE m1.movieId != m2.movieId
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM user_choice uc
+                        WHERE uc.userid = %s
+                        AND uc.title = m2.title
+                    )
+            ),
+            movie_match AS ( 
+                    SELECT movieId1, title1, movieId2, title2, similarity 
                     FROM movie_pairs 
-                    order by similarity desc), 
-                        distinct_count as ( 
-                            select distinct movieId2, title2 as Title, round(avg(similarity),2) as Rating_Match from movie_match 
-                            group by movieId2,title 
-                            order by Rating_Match desc)
-                            SELECT Title, Rating_Match FROM distinct_count
-                            order by Rating_Match desc
-                            limit 5;
-        """, (user_session,))
+                    ORDER BY similarity DESC
+            ), 
+            distinct_count AS ( 
+                    SELECT DISTINCT movieId2, title2 AS Title, ROUND(AVG(similarity), 2) AS Rating_Match 
+                    FROM movie_match 
+                    GROUP BY movieId2, title2
+                    ORDER BY Rating_Match DESC
+            )
+            SELECT Title, Rating_Match 
+            FROM distinct_count
+            ORDER BY Rating_Match DESC
+            LIMIT 5;
+        """, (user_session, user_session))
 
         # Fetch the result rows
         rows = cursor.fetchall()
