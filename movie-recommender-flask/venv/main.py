@@ -110,7 +110,7 @@ def movie_recommendation():
                     ORDER BY similarity DESC
             ), 
             distinct_count AS ( 
-                    SELECT DISTINCT movieId2, title2 AS Title, ROUND(AVG(similarity), 2) AS Rating_Match 
+                    SELECT DISTINCT movieId2, title2 AS Title, ROUND(AVG(similarity), 4) AS Rating_Match 
                     FROM movie_match 
                     GROUP BY movieId2, title2
                     ORDER BY Rating_Match DESC
